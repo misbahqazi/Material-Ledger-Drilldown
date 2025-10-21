@@ -1,0 +1,142 @@
+@AbapCatalog.sqlViewName: 'ZC_ML_COST'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Material Ledger report Cost Calculations'
+@Metadata.ignorePropagatedAnnotations: true
+define view zp_ml_coslval 
+as select from zp_ml_base as a
+
+association[0..*] to zp_ml_base as pc on a.kalnr = pc.kalnr and
+                                a.poper = pc.poper
+                               and a.BDATJ = pc.BDATJ
+                               and a.curtp = pc.curtp
+                               and pc.categ = 'PC' 
+
+association[0..*] to zp_ml_base as vn on a.kalnr = vn.kalnr and
+                                a.poper = vn.poper
+                               and a.BDATJ = vn.BDATJ
+                               and a.curtp = vn.curtp
+                               and vn.categ = 'VN' 
+                               
+association[0..*] to zp_ml_base as vp on a.kalnr = vp.kalnr and
+                                a.poper = vp.poper
+                               and a.BDATJ = vp.BDATJ
+                               and a.curtp = vp.curtp
+                               and vp.categ = 'VP' 
+                              
+association[0..*] to zp_ml_base as zu on a.kalnr = zu.kalnr and
+                                a.poper = zu.poper
+                               and a.BDATJ = zu.BDATJ
+                               and a.curtp = zu.curtp
+                               and zu.categ = 'ZU'    
+                               
+association[0..*] to zp_ml_base as eb on a.kalnr = eb.kalnr and
+                                a.poper = eb.poper
+                               and a.BDATJ = eb.BDATJ
+                               and a.curtp = eb.curtp
+                               and eb.categ = 'EB'  
+                               
+association[0..*] to zp_ml_base as nc on a.kalnr = nc.kalnr and
+                                a.poper = nc.poper
+                               and a.BDATJ = nc.BDATJ
+                               and a.curtp = nc.curtp
+                               and nc.categ = 'NI'                                    
+{                                                                                      
+    key a.kalnr,
+    key a.matnr,
+    key a.werks,
+    key a.BDATJ,
+    key a.poper,
+    key a.mlast,
+    key a.curtp,
+        valuationarea,
+        valationtype,
+        valuationclass,
+        companycode,
+        profitcenter,
+        materialtype,
+        materialgroup,
+        RUN_ACT,
+        RUN_APPL,
+        fiscyearperiod,
+        
+    // Beginning Inventory
+    @Semantics.quantity.unitOfMeasure: 'meins'
+    a.lbkum,
+    @Semantics.amount.currencyCode: 'waers'
+    coalesce(a.salk3,0) as pval_ab,
+    @Semantics.amount.currencyCode: 'waers'
+    COALESCE(a.estprd,0) as estprd_ab,
+    a.mstprd as mstprd_ab,
+    a.estkdm as estkdm_ab,
+    a.mstkdm as mstkdm_ab,
+    
+    @Semantics.quantity.unitOfMeasure: 'meins'
+    pc.lbkum as lbkum_pc,
+    @Semantics.amount.currencyCode: 'waers'
+    coalesce(pc.salk3,0) as pval_pc,
+    @Semantics.amount.currencyCode: 'waers'
+    COALESCE(pc.estprd,0) as estprd_pc,
+    pc.mstprd as mstprd_pc,
+    pc.estkdm as estkdm_pc,
+    pc.mstkdm as mstkdm_pc,
+    pc.salk3 as pc,
+    
+    // Receipts
+    // for ZU catagory, the preliminary value is calculated by adding
+    // Receipts and price change but only when the period is closed (70)
+    @Semantics.quantity.unitOfMeasure: 'meins'
+    zu.lbkum as lbcum_zu,
+    @Semantics.amount.currencyCode: 'waers'
+    zu.salk3 as pval_zu, 
+    @Semantics.amount.currencyCode: 'waers'
+    zu.estprd as estprd_zu,
+    zu.mstprd as mstprd_zu,
+    zu.estkdm as estkdm_zu,
+    zu.mstkdm as mstkdm_zu,
+
+    // Other Receipts/Consumption
+    @Semantics.quantity.unitOfMeasure: 'meins'
+    vp.lbkum as lbcum_vp,
+    @Semantics.amount.currencyCode: 'waers'
+    vp.salk3 as pval_vp, 
+    @Semantics.amount.currencyCode: 'waers'
+    vp.estprd as estprd_vp,
+    vp.mstprd as mstprd_vp,
+    vp.estkdm as estkdm_vp,
+    vp.mstkdm as mstkdm_vp,
+    
+    // Consumption
+    @Semantics.quantity.unitOfMeasure: 'meins'
+    vn.lbkum as lbcum_vn,
+    @Semantics.amount.currencyCode: 'waers'
+    case when vn.salk3 is null or vn.salk3 = 0.00 then coalesce(vn.salk3,0)
+    else coalesce(vn.salk3,0) - coalesce(nc.salk3,0) end as pval_vn, 
+    @Semantics.amount.currencyCode: 'waers'
+    COALESCE(vn.estprd,0) - COALESCE(nc.estprd, 0) as estprd_vn, //vn.estprd as estprd_vn,
+    
+    @Semantics.amount.currencyCode: 'waers'
+    COALESCE(vn.mstprd,0) - COALESCE(nc.mstprd, 0) as mstprd_vn,
+    @Semantics.amount.currencyCode: 'waers'
+    COALESCE(vn.estkdm,0) - COALESCE(nc.estkdm, 0) as estkdm_vn,
+    @Semantics.amount.currencyCode: 'waers'
+    COALESCE(vn.mstkdm,0) - COALESCE(nc.mstkdm, 0) as mstkdm_vn,
+    
+    nc.estprd,
+    nc.estkdm,
+        
+    // Ending Inventory
+    eb.lbkum as lbcum_eb,
+    @Semantics.amount.currencyCode: 'waers'
+    eb.salk3 as pval_eb, 
+    @Semantics.amount.currencyCode: 'waers'
+    eb.estprd as estprd_eb,
+    eb.mstprd as mstprd_eb,
+    eb.estkdm as estkdm_eb,
+    eb.mstkdm as mstkdm_eb,
+
+    a.waers,
+    a.meins
+}
+where a.categ = 'AB'
