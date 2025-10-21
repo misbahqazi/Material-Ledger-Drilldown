@@ -1,0 +1,202 @@
+@AbapCatalog.sqlViewName: 'ZC_ML_RPT'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Material Ledger Drilldown Report Cube'
+@Metadata.ignorePropagatedAnnotations: true
+
+@VDM.viewType: #COMPOSITE
+@Analytics: { dataCategory: #CUBE }
+@Analytics.dataExtraction.enabled: true
+
+@ClientHandling.algorithm: #SESSION_VARIABLE
+@ObjectModel.usageType.sizeCategory: #XXL
+@ObjectModel.usageType.serviceQuality: #C
+@ObjectModel.usageType.dataClass: #MIXED
+
+define view zc_ml_Cube as select from zp_ml_coslval
+
+association [0..1] to I_Material                     as _Material                      on  zp_ml_coslval.matnr = _Material.Material
+association [0..1] to I_CompanyCode                  as _CompanyCode                   on  zp_ml_coslval.companycode = _CompanyCode.CompanyCode
+association [0..1] to I_Plant                        as _Plant                         on  zp_ml_coslval.werks   = _Plant.Plant
+association [0..1] to zc_fiscalperiodvh              as _period                        on  zp_ml_coslval.poper = _period.PostingPeriod  
+                                                                                  
+association [0..1] to I_MaterialGroup                as _MaterialGroup                 on  zp_ml_coslval.materialgroup = _MaterialGroup.MaterialGroup
+{
+     // Dimensions
+    key kalnr,
+    @ObjectModel.foreignKey.association: '_Material'
+    key matnr,
+    @ObjectModel.foreignKey.association: '_Plant'
+    key werks,
+    @Semantics.fiscal.year: true
+    key BDATJ,
+    @Consumption.valueHelpDefinition: [{ entity: { name: 'ZC_FiscalPeriodVH',element: 'PostingPeriod' } }]  
+    @ObjectModel.foreignKey.association: '_period'
+    key poper,
+    key mlast,
+    key curtp,
+        valuationarea,
+        valationtype,
+        valuationclass,
+        @Consumption.valueHelpDefinition: [
+        { entity:  { name:    'I_CompanyCodeStdVH',
+                     element: 'CompanyCode' } }]
+        @ObjectModel.foreignKey.association: '_CompanyCode'
+        companycode,
+        profitcenter,
+        materialtype,
+        @ObjectModel.foreignKey.association: '_Materialgroup'
+        materialgroup,
+        RUN_ACT,
+        RUN_APPL,
+
+  // measures
+    @EndUserText.label: 'Object Set--Beginning Inventory'
+    @DefaultAggregation: #SUM
+    lbkum,
+    @EndUserText.label: 'Prelim Val--Beginning Inventory'
+    @DefaultAggregation: #SUM
+    pval_ab,
+    @EndUserText.label: '1Lvl PrDif--Beginning Inventory'
+    @DefaultAggregation: #SUM
+    estprd_ab,
+    @EndUserText.label: 'MLvl PrDif--Beginning Inventory'
+    @DefaultAggregation: #SUM
+    mstprd_ab,
+    @EndUserText.label: 'Actual Value--Beginning Inventory'
+    @DefaultAggregation: #SUM
+    @Semantics.amount.currencyCode: 'waers'
+    ( pval_ab + estprd_ab + mstprd_ab + estkdm_ab + mstkdm_ab ) as actval_ab,
+    
+    @EndUserText.label: '1Lvl ERD--Beginning Inventory'
+    @DefaultAggregation: #SUM
+    estkdm_ab,
+    @EndUserText.label: 'MLvl ERD--Beginning Inventory'
+    @DefaultAggregation: #SUM
+    mstkdm_ab,
+    
+    @EndUserText.label: 'Object Set--Price Changes'
+    @DefaultAggregation: #SUM
+    lbkum_pc,
+    @EndUserText.label: 'Prelim Val--Price Changes'
+    @DefaultAggregation: #SUM
+    pval_pc,
+    @EndUserText.label: '1Lvl PrDif--Price Changes'
+    @DefaultAggregation: #SUM
+    estprd_pc,
+    @EndUserText.label: 'MLvl PrDif--Price Changes'
+    @DefaultAggregation: #SUM
+    mstprd_pc,
+    @EndUserText.label: 'Actual Value--Price Changes'
+    @DefaultAggregation: #SUM
+    @Semantics.amount.currencyCode: 'waers'
+    ( pval_pc + estprd_pc + mstprd_pc + estkdm_pc + mstkdm_pc ) as actval_pc,
+    @EndUserText.label: '1Lvl ERD--Price Changes'
+    @DefaultAggregation: #SUM
+    estkdm_pc,
+    @EndUserText.label: 'MLvl ERD--Price Changes'
+    @DefaultAggregation: #SUM
+    mstkdm_pc,
+    
+    @EndUserText.label: 'Object Set--Receipts'
+    @DefaultAggregation: #SUM
+    lbcum_zu,
+    @EndUserText.label: 'Prelim Val--Receipts'
+    @DefaultAggregation: #SUM
+    pval_zu,
+    @EndUserText.label: '1Lvl PrDif--Receipts'
+    @DefaultAggregation: #SUM
+    estprd_zu,
+    @EndUserText.label: 'MLvl PrDif--Recepits'
+    @DefaultAggregation: #SUM
+    mstprd_zu,
+    @EndUserText.label: 'Actual Value--Receipts'
+    @DefaultAggregation: #SUM
+    @Semantics.amount.currencyCode: 'waers'
+    ( pval_zu + estprd_zu + mstprd_zu + estkdm_zu + mstkdm_zu ) as actval_zu,
+    @EndUserText.label: '1Lvl ERD--Receipts'
+    @DefaultAggregation: #SUM
+    estkdm_zu,
+    @EndUserText.label: 'MLvl ERD--Receipts'
+    @DefaultAggregation: #SUM
+    mstkdm_zu,
+    
+    @EndUserText.label: 'Object Set--Other Recepits/consump'
+    @DefaultAggregation: #SUM
+    lbcum_vp,
+    @EndUserText.label: 'Prelim Val--Other Recepits/consump'
+    @DefaultAggregation: #SUM
+    pval_vp,
+    @EndUserText.label: '1Lvl PrDif--Other Recepits/consump'
+    @DefaultAggregation: #SUM
+    estprd_vp,
+    @EndUserText.label: 'MLvl PrDif--Other Recepits/consump'
+    @DefaultAggregation: #SUM
+    mstprd_vp,   
+    @Semantics.amount.currencyCode: 'waers'
+    @EndUserText.label: 'Actual Value--Other Recepits/consump'
+    @DefaultAggregation: #SUM
+    ( pval_vp + estprd_vp + mstprd_vp + estkdm_vp + mstkdm_vp ) as actval_vp,
+    @EndUserText.label: '1Lvl ERD--Other Recepits/consump'
+    @DefaultAggregation: #SUM
+    estkdm_vp,
+    @EndUserText.label: 'MLvl ERD--Other Recepits/consump'
+    @DefaultAggregation: #SUM
+    mstkdm_vp,
+    
+    @EndUserText.label: 'Object Set--Consumption'
+    @DefaultAggregation: #SUM
+    lbcum_vn,
+    @EndUserText.label: 'Prelim Val--Consumption'
+    @DefaultAggregation: #SUM
+    pval_vn,
+    @EndUserText.label: '1Lvl PrDif--Consumption'
+    @DefaultAggregation: #SUM
+    estprd_vn,
+    @EndUserText.label: 'MLvl PrDif--Consumption'
+    @DefaultAggregation: #SUM
+    mstprd_vn,
+    @Semantics.amount.currencyCode: 'waers'
+    @EndUserText.label: 'Actual Value--Consumption'
+    @DefaultAggregation: #SUM
+    ( pval_vn + estprd_vn + mstprd_vn + estkdm_vn + mstkdm_vn ) as actval_vn,
+    @EndUserText.label: '1Lvl ERD--Consumption'
+    @DefaultAggregation: #SUM
+    estkdm_vn,
+    @EndUserText.label: 'MLvl ERD--Consumption'
+    @DefaultAggregation: #SUM
+    mstkdm_vn,
+    
+    @EndUserText.label: 'Object Set--Ending Inventory'
+    @DefaultAggregation: #SUM
+    lbcum_eb,
+    @EndUserText.label: 'Prelim Val--Ending Inventory'
+    @DefaultAggregation: #SUM
+    pval_eb,
+    @EndUserText.label: '1Lvl PrDif--Ending Inventory'
+    @DefaultAggregation: #SUM
+    estprd_eb,
+    @EndUserText.label: 'MLvl PrDif--Ending Inventory'
+    @DefaultAggregation: #SUM
+    mstprd_eb,
+    @EndUserText.label: 'Actual Value--Ending Inventory'
+    @DefaultAggregation: #SUM
+    @Semantics.amount.currencyCode: 'waers'
+    ( pval_eb + estprd_eb + mstprd_eb + estkdm_eb + mstkdm_eb ) as actval_eb,
+    @EndUserText.label: '1Lvl ERD--Ending Inventory'
+    @DefaultAggregation: #SUM
+    estkdm_eb,
+    @EndUserText.label: 'MLvl ERD--Ending Inventory'
+    @DefaultAggregation: #SUM
+    mstkdm_eb,
+    
+    waers,
+    meins,
+    
+    _Material,
+    _CompanyCode,
+    _Plant,
+    _period,
+    _MaterialGroup
+}
