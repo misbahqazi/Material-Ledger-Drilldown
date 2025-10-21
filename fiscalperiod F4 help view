@@ -1,0 +1,14 @@
+@AbapCatalog.sqlViewName: 'ZC_FISCPERVH'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Fiscal Peiod Search help'
+@Metadata.ignorePropagatedAnnotations: true
+define view zc_fiscalperiodvh as select distinct from t009b
+
+{
+    key poper      as PostingPeriod
+//    ,_Text
+}
+    
+where periv = 'EX'
