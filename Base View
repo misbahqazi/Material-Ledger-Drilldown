@@ -1,0 +1,377 @@
+@AbapCatalog.sqlViewName: 'ZP_MLB1'
+@AbapCatalog.compiler.compareFilter: true
+@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Material Ledger report Base view'
+@Metadata.ignorePropagatedAnnotations: true
+define view zp_ml_base 
+
+as select from Fcml_Rep_Ddl as a inner join FCML_MAT_DDL as m on a.kalnr_mat = m.kalnr
+                                 
+left outer join zp_ml_periodstatus as p on a.kalnr_mat = p.kalnr
+                                       and a.poper = p.poper
+                                       and a.BDATJ = p.gjahr      
+
+{
+    key a.kalnr_mat as kalnr,
+    key m.matnr,
+    key m.werks,
+    key a.BDATJ,
+    key a.poper,
+    key m.mlast,
+    key a.curtp,
+        m.bwkey as valuationarea,
+        m.bwtar as valationtype,
+        m.bklas as valuationclass,
+        m.bukrs as companycode,
+        m.prctr as profitcenter,
+        m.mtart as materialtype,
+        m.matkl as materialgroup,
+        a.RUN_ACT,
+        a.RUN_APPL,
+        cast(concat(a.BDATJ,a.poper) as fins_fyearperiod ) as fiscyearperiod,
+        
+        case when a.CATEG is null then 'AB' else a.CATEG
+        end as categ,
+        @Semantics.quantity.unitOfMeasure: 'meins'
+        sum( a.lbkum ) as lbkum,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.salk3 ) as salk3,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.estprd ) as estprd,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.mstprd) as mstprd,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.estkdm ) as estkdm,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.mstkdm ) as mstkdm,
+        p.xclose,
+        a.waers,
+        m.meins
+    
+    
+}
+where a.CATEG = 'AB'
+group by a.kalnr_mat,m.matnr,m.werks,a.BDATJ,a.poper,m.mlast,a.curtp,a.RUN_ACT,a.RUN_APPL,
+         p.jahrper,m.bwkey,m.bwtar,m.bklas,m.bukrs,m.prctr,m.mtart,m.matkl,a.CATEG,p.xclose,a.waers,m.meins
+
+union all select from Fcml_Rep_Ddl as a
+inner join FCML_MAT_DDL as m on a.kalnr_mat = m.kalnr
+
+{
+    key m.kalnr,
+    key m.matnr,
+    key m.werks,
+    key a.BDATJ,
+    key a.poper,
+    key m.mlast,
+    key a.curtp,
+        m.bwkey as valuationarea,
+        m.bwtar as valationtype,
+        m.bklas as valuationclass,
+        m.bukrs as companycode,
+        m.prctr as profitcenter,
+        m.mtart as materialtype,
+        m.matkl as materialgroup,
+        a.RUN_ACT,
+        a.RUN_APPL,
+        cast( concat(a.BDATJ,a.poper) as jahrper ) as fiscyearperiod,
+        case when a.CATEG is null then 'ZU' else a.CATEG
+        end as categ,
+        @Semantics.quantity.unitOfMeasure: 'meins'
+        sum( a.lbkum ) as lbkum,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.salk3 ) as salk3,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.estprd ) as estprd,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.mstprd) as mstprd,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.estkdm ) as estkdm,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.mstkdm ) as mstkdm,
+        ' ' as xclose, 
+        a.waers,
+        m.meins
+    
+}
+where a.CATEG = 'ZU'
+group by m.kalnr,m.matnr,m.werks,a.BDATJ,a.poper,m.mlast,a.curtp,a.RUN_ACT,a.RUN_APPL,
+         m.bwkey,m.bwtar,m.bklas,m.bukrs,m.prctr,m.mtart,m.matkl,
+         a.CATEG,a.waers,m.meins
+         
+union all select from Fcml_Rep_Ddl as a //fcml_ml_mara_c as a
+inner join FCML_MAT_DDL as m on a.kalnr_mat = m.kalnr
+
+{
+    key m.kalnr,
+    key m.matnr,
+    key m.werks,
+    key a.BDATJ,
+    key a.poper,
+    key m.mlast,
+    key a.curtp,
+        m.bwkey as valuationarea,
+        m.bwtar as valationtype,
+        m.bklas as valuationclass,
+        m.bukrs as companycode,
+        m.prctr as profitcenter,
+        m.mtart as materialtype,
+        m.matkl as materialgroup,
+        a.RUN_ACT,
+        a.RUN_APPL,
+        cast( concat(a.BDATJ,a.poper) as jahrper ) as fiscyearperiod,
+        case when a.CATEG is null then 'PC' else a.CATEG
+        end as categ,
+        @Semantics.quantity.unitOfMeasure: 'meins'
+        sum( a.lbkum ) as lbkum,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.salk3 ) as salk3,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.estprd ) as estprd,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.mstprd) as mstprd,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.estkdm ) as estkdm,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.mstkdm ) as mstkdm,
+        ' ' as xclose, 
+        a.waers,
+        m.meins 
+    
+}
+where a.CATEG = 'PC'
+group by m.kalnr,m.matnr,m.werks,a.BDATJ,a.poper,m.mlast,a.curtp,a.RUN_ACT,a.RUN_APPL,
+         m.bwkey,m.bwtar,m.bklas,m.bukrs,m.prctr,m.mtart,m.matkl,
+         a.CATEG,a.waers,m.meins
+
+union all select from Fcml_Rep_Ddl as a //fcml_ml_mara_c as a
+inner join FCML_MAT_DDL as m on a.kalnr_mat = m.kalnr
+
+{
+    key m.kalnr,
+    key m.matnr,
+    key m.werks,
+    key a.BDATJ,
+    key a.poper,
+    key m.mlast,
+    key a.curtp,
+        m.bwkey as valuationarea,
+        m.bwtar as valationtype,
+        m.bklas as valuationclass,
+        m.bukrs as companycode,
+        m.prctr as profitcenter,
+        m.mtart as materialtype,
+        m.matkl as materialgroup,
+        a.RUN_ACT,
+        a.RUN_APPL,
+        cast( concat(a.BDATJ,a.poper) as jahrper ) as fiscyearperiod,
+        case when a.CATEG is null then 'EB' else a.CATEG
+        end as categ,
+        @Semantics.quantity.unitOfMeasure: 'meins'
+        sum( a.lbkum ) as lbkum,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.salk3 ) as salk3,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.estprd ) as estprd,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.mstprd) as mstprd,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.estkdm ) as estkdm,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.mstkdm ) as mstkdm,
+        ' ' as xclose, 
+        a.waers,
+        m.meins
+    
+}
+where a.CATEG = 'EB'
+group by m.kalnr,m.matnr,m.werks,a.BDATJ,a.poper,m.mlast,a.curtp,a.RUN_ACT,a.RUN_APPL,
+         m.bwkey,m.bwtar,m.bklas,m.bukrs,m.prctr,m.mtart,m.matkl,
+         a.CATEG,a.waers,m.meins
+
+union all select from Fcml_Rep_Ddl as a //fcml_ml_mara_c as a
+inner join FCML_MAT_DDL as m on a.kalnr_mat = m.kalnr
+
+{
+    key m.kalnr,
+    key m.matnr,
+    key m.werks,
+    key a.BDATJ,
+    key a.poper,
+    key m.mlast,
+    key a.curtp,
+        m.bwkey as valuationarea,
+        m.bwtar as valationtype,
+        m.bklas as valuationclass,
+        m.bukrs as companycode,
+        m.prctr as profitcenter,
+        m.mtart as materialtype,
+        m.matkl as materialgroup,
+        a.RUN_ACT,
+        a.RUN_APPL,
+        cast( concat(a.BDATJ,a.poper) as jahrper ) as fiscyearperiod,
+        case when a.CATEG is null then 'VN' else a.CATEG
+        end as categ,
+        @Semantics.quantity.unitOfMeasure: 'meins'
+        sum( a.lbkum ) as lbkum,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.salk3 ) as salk3,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.estprd ) as estprd,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.mstprd) as mstprd,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.estkdm ) as estkdm,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.mstkdm ) as mstkdm,
+        ' ' as xclose, 
+        a.waers,
+        m.meins
+
+}
+where a.CATEG = 'VN'
+group by m.kalnr,m.matnr,m.werks,a.BDATJ,a.poper,m.mlast,a.curtp,a.RUN_ACT,a.RUN_APPL,
+         m.bwkey,m.bwtar,m.bklas,m.bukrs,m.prctr,m.mtart,m.matkl,
+         a.CATEG,a.waers,m.meins
+
+union all select from Fcml_Rep_Ddl as a //fcml_ml_mara_c as a
+inner join FCML_MAT_DDL as m on a.kalnr_mat = m.kalnr
+
+{
+    key m.kalnr,
+    key m.matnr,
+    key m.werks,
+    key a.BDATJ,
+    key a.poper,
+    key m.mlast,
+    key a.curtp,
+        m.bwkey as valuationarea,
+        m.bwtar as valationtype,
+        m.bklas as valuationclass,
+        m.bukrs as companycode,
+        m.prctr as profitcenter,
+        m.mtart as materialtype,
+        m.matkl as materialgroup,
+        a.RUN_ACT,
+        a.RUN_APPL,
+        cast( concat(a.BDATJ,a.poper) as jahrper ) as fiscyearperiod,
+        case when a.CATEG is null then 'VP' else a.CATEG
+        end as categ,
+        @Semantics.quantity.unitOfMeasure: 'meins'
+        sum( a.lbkum ) as lbkum,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.salk3 ) as salk3,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.estprd ) as estprd,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.mstprd) as mstprd,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.estkdm ) as estkdm,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.mstkdm ) as mstkdm,
+        ' ' as xclose, 
+        a.waers,
+        m.meins
+
+}
+where a.CATEG = 'VP'
+group by m.kalnr,m.matnr,m.werks,a.BDATJ,a.poper,m.mlast,a.curtp,a.RUN_ACT,a.RUN_APPL,
+         m.bwkey,m.bwtar,m.bklas,m.bukrs,m.prctr,m.mtart,m.matkl,
+         a.CATEG,a.waers,m.meins
+
+union all select from ckmvfm_out as a
+inner join FCML_MAT_DDL as m on a.kalnr = m.kalnr
+
+{
+    key a.kalnr,
+    key a.matnr,
+    key a.werks,
+    key a.bdatj,
+    key a.poper,
+    key a.mlast,
+    key a.curtp,
+        a.bwkey as valuationarea,
+        a.bwtar as valationtype,
+        m.bklas as valuationclass,
+        m.bukrs as companycode,
+        a.prctr as profitcenter,
+        a.mtart as materialtype,
+        a.matkl as materialgroup,
+        ' ' as RUN_ACT,
+        ' ' as RUN_APPL,
+        cast( concat(a.bdatj,a.poper) as jahrper ) as fiscyearperiod,
+        case when a.pos_type is null then 'NI' else substring(a.pos_type,1,2)
+        end as categ,
+        @Semantics.quantity.unitOfMeasure: 'meins'
+        sum( a.lbkum ) as lbkum,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.salk3 ) as salk3,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.estprd ) as estprd,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.mstprd) as mstprd,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.estkdm ) as estkdm,
+        @Semantics.amount.currencyCode: 'waers'
+        sum( a.mstkdm ) as mstkdm,
+        ' ' as xclose, 
+        a.waers,
+        m.meins
+
+}
+where a.pos_type = 'NIN'
+group by a.kalnr,a.matnr,a.werks,a.bdatj,a.poper,a.mlast,
+         a.curtp,a.bwkey,a.bwtar,m.bklas,m.bukrs,a.prctr,a.mtart,a.matkl,
+         a.pos_type,a.waers,m.meins
+
+union all select from fcml_ml_mara_c as a
+left outer join zp_ml_basel as x on a.kalnr = x.kalnr
+                            and a.bdatj = x.BDATJ
+                            and a.poper = x.poper
+                            and a.curtp = x.curtp
+inner join FCML_MAT_DDL as m on a.kalnr = m.kalnr
+left outer join zp_ml_periodstatus as p on a.kalnr = p.kalnr
+                                       and a.poper = p.poper
+                                       and a.bdatj = p.gjahr 
+{
+    key a.kalnr,
+    key a.matnr,
+    key a.werks,
+    key a.bdatj,
+    key a.poper,
+    key a.mlast,
+    key a.curtp,
+    
+        a.bwkey as valuationarea,
+        a.bwtar as valationtype,
+        m.bklas as valuationclass,
+        m.bukrs as companycode,
+        a.prctr as profitcenter,
+        a.mtart as materialtype,
+        a.matkl as materialgroup,
+        ' ' as RUN_ACT,
+        ' ' as RUN_APPL,
+        cast( concat(a.bdatj,a.poper) as jahrper ) as fiscyearperiod,
+        'AB' as categ,
+        @Semantics.quantity.unitOfMeasure: 'meins'
+        0 as lbkum,
+        @Semantics.amount.currencyCode: 'waers'
+        0 as salk3,
+        @Semantics.amount.currencyCode: 'waers'
+        0 as estprd,
+        @Semantics.amount.currencyCode: 'waers'
+        0 as mstprd,
+        @Semantics.amount.currencyCode: 'waers'
+        0 as estkdm,
+        @Semantics.amount.currencyCode: 'waers'
+        0 as mstkdm,
+        p.xclose, 
+        a.waers,
+        m.meins
+
+}
+where x.poper is null
+group by a.kalnr,a.matnr,a.werks,a.bdatj,a.poper,a.mlast,
+         a.curtp,a.bwkey,a.bwtar,m.bklas,m.bukrs,a.prctr,a.mtart,a.matkl,
+         p.xclose,a.waers,m.meins
