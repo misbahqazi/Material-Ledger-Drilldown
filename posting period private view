@@ -1,0 +1,15 @@
+@AbapCatalog.sqlViewName: 'ZP_PERIODSTAT'
+@AbapCatalog.compiler.compareFilter: true
+//@AbapCatalog.preserveKey: true
+@AccessControl.authorizationCheck: #NOT_REQUIRED
+@EndUserText.label: 'Material Ledger CKM3N Period Status'
+@Metadata.ignorePropagatedAnnotations: true
+define view zp_ml_periodstatus as select from mlrunlist
+{
+    key runref,
+    key kalnr,
+    key substring(jahrper,1,4) as gjahr,
+    key substring(jahrper,5,3) as poper,
+    key jahrper,
+        xclose
+}
